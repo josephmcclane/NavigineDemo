@@ -19,7 +19,7 @@ import com.navigine.naviginesdk.*;
 public class MainActivity extends Activity
 {
   private static final String   TAG                     = "NAVIGINE.Demo";
-  private static final int      UPDATE_TIMEOUT          = 100;  // milliseconds
+  private static final int      UPDATE_TIMEOUT          = 50;  // milliseconds
   private static final int      ADJUST_TIMEOUT          = 5000; // milliseconds
   private static final int      ERROR_MESSAGE_TIMEOUT   = 5000; // milliseconds
   private static final boolean  ORIENTATION_ENABLED     = true; // Show device orientation?
@@ -104,7 +104,10 @@ public class MainActivity extends Activity
       new LocationView.Listener()
       {
         @Override public void onClick     (float x, float y) { handleClick(x, y);     }
-        @Override public void onLongClick (float x, float y) { handleLongClick(x, y); }
+        @Override public void onLongClick (float x, float y) {
+          Log.d("Long Click", "Point: "+x+" "+y);
+          handleLongClick(x, y);
+        }
         @Override public void onScroll    (float x, float y) { mAdjustTime = NavigineSDK.currentTimeMillis() + ADJUST_TIMEOUT; }
         @Override public void onZoom      (float ratio)      { mAdjustTime = NavigineSDK.currentTimeMillis() + ADJUST_TIMEOUT; }
         
@@ -118,7 +121,7 @@ public class MainActivity extends Activity
     );
     
     loadMap();
-
+    setPredefinePointAndPath(mLocationView.getAbsCoordinates(485.0f, 607.0f));
     // Starting interface updates
     mTimerTask = new TimerTask()
     {
@@ -266,6 +269,7 @@ public class MainActivity extends Activity
     // Check if we touched venue
     mSelectedVenue = getVenueAt(x, y);
     mSelectedVenueRect = new RectF();
+
     mHandler.post(mRunnable);
   }
   
@@ -394,6 +398,47 @@ public class MainActivity extends Activity
     if (mLocation == null || mCurrentSubLocationIndex < 0)
       return false;
     return loadSubLocation(mCurrentSubLocationIndex - 1);
+  }
+
+  //My defined function for show pre defined functions
+  private void setPredefinePointAndPath(PointF P){
+    if (DemoApp.Navigation.getMode() == NavigationThread.MODE_IDLE)
+      DemoApp.Navigation.setMode(NavigationThread.MODE_NORMAL);
+
+    // Get device info from NavigationThread
+    mDeviceInfo = DemoApp.Navigation.getDeviceInfo();
+
+
+    if (mLocation == null || mCurrentSubLocationIndex < 0)
+      return;
+
+    SubLocation subLoc = mLocation.subLocations.get(mCurrentSubLocationIndex);
+    if (subLoc == null)
+      return;
+
+    if (P.x < 0.0f || P.x > subLoc.width ||
+            P.y < 0.0f || P.y > subLoc.height)
+    {
+      // Missing the map
+      return;
+    }
+
+    if (mTargetPoint != null || mTargetVenue != null)
+    {
+      //setErrorMessage("Unable to make route: you must cancel the previous route first!");
+      return;
+    }
+
+    if (mDeviceInfo.errorCode != 0)
+    {
+      //setErrorMessage("Unable to make route: navigation is not available!");
+      return;
+    }
+
+    mPinPoint = new LocationPoint(subLoc.id, P.x, P.y);
+    mPinPointRect = new RectF();
+
+    onMakeRoute(null);
   }
 
   private void makePin(PointF P)
