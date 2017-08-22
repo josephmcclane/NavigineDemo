@@ -14,10 +14,10 @@ import java.io.*;
 import java.lang.*;
 import java.util.*;
 
+
 import com.navigine.naviginesdk.*;
 
-public class MainActivity extends Activity
-{
+public class MainActivity extends Activity{
   private static final String   TAG                     = "NAVIGINE.Demo";
   private static final int      UPDATE_TIMEOUT          = 50;  // milliseconds
   private static final int      ADJUST_TIMEOUT          = 5000; // milliseconds
